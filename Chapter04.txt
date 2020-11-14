@@ -1,0 +1,221 @@
+************************************************************************************************************
+Summary
+	
+
+------------------------------------------------------------------------------------------------------------
+4.1探查进程
+	1、探查进程
+		ps
+			$ps
+			PID  TTY   TIME     CMD
+			3081 pts/0 00:00:00 bash
+			3209 pts/0 00:00:00 ps
+			进程ID - PID       运行在哪个终端 - TTY       进程已用的CPU时间 - TIME
+	
+	2、实时监测进程
+		
+		
+-----------------------------------------------------------------------------------------------------------	
+4.2 使用 df 命令  --  【 默认当前文件夹 】
+	1、显示设备的磁盘使用情况
+		设备的设备文件位置；
+	  能容纳多少个1024字节大小的块；
+	  已用了多少个1024字节大小的块；
+	  还有多少个1024字节大小的块可用；
+	  已用空间所占的比例；
+	  设备挂载到了哪个挂载点上
+	
+		$ df -h
+		Filesystem Size Used Avail Use% Mounted on
+		/dev/sdb2 18G 7.4G 9.2G 45% /
+		/dev/sda1 99M 19M 76M 20% /boot
+		tmpfs 117M 0 117M 0% /dev/shm
+		/dev/sdb1 125M 112M 14M 90% /media/disk
+		
+	2、使用 du 命令
+		检查具体某个目录的使用情况
+			-c ：显示所有已列出文件总的大小
+			-h ：按用户易读的格式输出大小，即用K替代千字节，用M替代兆字节，用G替代吉字节。
+			-s ：显示每个输出参数的总计。
+			
+	3、压缩文件  --  【 gzip 】
+		gzip file1 file2 ...   压缩
+		gunzip file.gz         解压
+			
+-----------------------------------------------------------------------------------------------------------
+4.3处理数据文件
+	1、排序数据  --  【 sort 】
+		1.按照默认的语言顺序排序
+			$ cat file1
+			one
+			two
+			three
+			four
+			five
+			$ sort file1
+			five
+			four
+			one
+			three
+			two
+
+		2.-n 选项，告诉sort吧数字识别为数字而非字符串，并且按值排序
+		
+		3.-M 用三字符月份名按月份排序
+		
+		4.常用选项
+			-b  --ignore-leading-blanks   -->   排序时忽略起始的空白
+			-C  --check=quiet   -->   不排序，如果数据无序也不要报告
+			-c  --check   -->   不排序，但检查输入数据是不是已排序；未排序的话，报告
+			-d  --dictionary-order   -->   仅考虑空白和字母，不考虑特殊字符
+			-f  --ignore-case   -->   默认情况下，会将大写字母排在前面；这个参数会忽略大小写
+			-g  --general-number-sort   -->   把值当浮点数来排序，支持科学计数法表示的值
+			-i  --ignore-nonprinting   -->   在排序时忽略不可打印字符
+			-k  --key=POS1[,POS2]   -->   排序从POS1位置开始；如果指定了POS2的话，到POS2位置结束
+			-M  --month-sort   -->   用三字符月份名按月份排序
+			-m  --merge   -->   将两个已排序数据文件合并
+			-n  --numeric-sort   -->   按字符串数值来排序（并不转换为浮点数）
+			-o  --output=file   -->   将排序结果写出到指定的文件中
+			-R  --random-sort   -->   按随机生成的散列表的键值排序
+				--random-source=FILE   -->   指定 -R 参数用到的随机字节的源文件
+			-r  --reverse   -->   反序排序（升序变成降序）
+			-S  --buffer-size=SIZE   -->   指定使用的内存大小
+			-s  --stable   -->   禁用最后重排序比较
+			-T  --temporary-directory=DIR   -->   指定一个位置来存储临时工作文件
+			-t  --field-separator=SEP   -->   指定一个用来区分键位置的字符
+			-u  --unique   -->   和 -c 参数一起使用时，检查严格排序；
+								 不和 -c 参数一起用时，仅输出第一例相似的两行
+			-z  --zero-terminated   -->   用NULL字符作为行尾，而不是用换行符
+		
+		5.-k 和 -t 参数在对按字段分隔的数据进行排序时非常有用，例如/etc/passwd文件。
+		可以用 -t参数来指定字段分隔符，然后用 -k 参数(值是整数)来指定排序的字段。
+			$ sort -t ':' -k 3 -n /etc/passwd
+			
+	2、搜索数据  --  【 grep 】
+		grep [options] pattern [file]
+		
+		1.在大文件中找一行数据
+			
+			$ grep three file1
+			three
+			$ grep t file1  #匹配模式，含有t
+			two
+			three
+			
+		2.查找不含有pattern的行,反向搜索  --  【 -v 】
+			$ grep -v t file1
+			one
+			four
+			five
+			
+		3.显示匹配模式的行所在的行号  --  【 -n 】
+			$ grep -n t file1
+			2:two
+			3:three
+		
+		4.统计有多少行匹配  --  【 -c 】
+			$ grep -c t file1
+			2
+	
+		5.指定多个匹配模式  --  【 -e 】
+			$ grep -e t -e f file1
+			two
+			three
+			four
+			five
+		
+		【 grep 命令用基本的Unix风格正则表达式来匹配模式 】
+		正则表达式就写在grep的匹配项上
+		
+	3、压缩数据
+		工具      文件扩展名                     描述
+		bzip2        .bz2         采用Burrows-Wheeler块排序文本压缩算法和霍夫曼编码
+		compress     .Z           最初的Unix文件压缩工具，已经快没人用了
+		gzip         .gz          GNU压缩工具，用Lempel-Ziv编码
+		zip          .zip         Windows上PKZIP工具的Unix实现
+		
+		【 gzip 是Linux上最流行的压缩工具 】
+		gzip包含以下工具
+		gzip ：用来压缩文件。
+	  gzcat ：用来查看压缩过的文本文件的内容。
+	  gunzip ：用来解压文件
+	
+		gzip 命令会压缩你在命令行指定的文件，可以使用通配符指定文件
+		
+	4、归档数据  --  【 tar 】
+		tar function [options] object1 object2 ...
+		tar 命令的功能 【 function 】
+		
+		    功能   长名称                 描述
+			-A  --concatenate   -->   将一个已有tar归档文件追加到另一个已有tar归档文件
+			-c  --create        -->   创建一个新的tar归档文件
+			-d  --diff          -->   检查归档文件和文件系统的不同之处
+				--delete        -->   从已有tar归档文件中删除
+			-r  --append        -->   追加文件到已有tar归档文件末尾
+			-t  --list          -->   列出已有tar归档文件的内容
+			-u  --update        -->   将比tar归档文件中已有的同名文件新的文件追加到该tar归档文件中
+			-x  --extract       -->   从已有tar归档文件中提取文件
+			
+			option
+				-C dir   -->   切换到指定目录
+				-f file   -->   输出结果到文件或设备 file
+				-j   -->   将输出重定向给 bzip2 命令来压缩内容
+				-p   -->   保留所有文件权限
+				-v   -->   在处理文件时显示文件
+				-z   -->   将输出重定向给 gzip 命令来压缩内容
+			
+			tar -cvf test.tar test/ test2/
+			上面的命令创建了名为test.tar的归档文件，含有test和test2目录内容。接着，用下列命令：
+			tar -tf test.tar
+			列出tar文件test.tar的内容（但并不提取文件） 。最后，用命令：
+			tar -xvf test.tar
+			通过这一命令从tar文件test.tar中提取内容
+			
+			【 文件名以.tgz结尾。这些是 gzip 压缩过的tar文件可以用命令 tar -zxvf filename.tgz 来解压。】
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

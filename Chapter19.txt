@@ -1,0 +1,462 @@
+************************************************************************************************************
+------------------------------------------------------------------------------------------------------------
+19.1文本处理
+	1、命令行编辑器  --  sed和gawk
+		1.自动格式化、插入、修改或删除文本元素
+
+	2、sed 编辑器  --  流编辑器（stream editor）
+		1.sed编辑器可以根据命令来处理数据流中的数据，这些命令要么从命令行中输入，
+			要么存储在一个命令文本文件中。
+			
+		2.sed编辑器会执行下列操作
+			a、一次从输入中【读取】一行数据
+			b、根据所提供的编辑器命令【匹配】数据
+			c、按照命令【修改】流中的数据
+			d、将新的数据【输出】到 STDOUT 
+
+		3.在流编辑器将所有命令与一行数据匹配完毕后，它会读取下一行数据并重复这个过程。
+			在流编辑器处理完流中的所有数据行后，它就会终止。
+			
+		4.sed options script file
+			-e script  -->  在处理输入时，将 script 中指定的命令添加到已有的命令中
+			-f file  -->  在处理输入时，将 file 中指定的命令添加到已有的命令中
+			-n  -->  不产生命令输出，使用 print 命令来完成输出
+			
+		5. 在命令行定义编辑器命令
+			a、【 s命令，斜线间指定的第二个文本字符串来替换第一个文本字符串 】 -- 查找替换，不论是否单个单词
+				，包含指定字符串就会修改
+				默认情况下，sed编辑器会将指定的命令应用到 STDIN 输入流上。可以将输入管接给sed处理
+					$ echo "This is a test" | sed 's/test/big test/'
+					This is a big test
+					这个命令使用了s命令，s命令用斜线间指定的第二个文本字符串来替换第一个文本字符串，big test
+					-->test
+				修改文件中的数据，用时和修改输入流的输入用时相差无几
+					$ cat data1.txt
+					The quick brown fox jumps over the lazy dog.
+					The quick brown fox jumps over the lazy dog.
+					The quick brown fox jumps over the lazy dog.
+					The quick brown fox jumps over the lazy dog.
+					
+					$ sed 's/dog/cat/' data1.txt
+					The quick brown fox jumps over the lazy cat.
+					The quick brown fox jumps over the lazy cat.
+					The quick brown fox jumps over the lazy cat.
+					The quick brown fox jumps over the lazy cat.
+					
+				【 sed编辑器并不会修改文本文件的数据。它只会将修改后的数据发送到STDOUT ，原文件数据不变。】
+			
+			b、 在命令行使用多个编辑器命令  --  【 -e 】
+				$ sed -e 's/brown/green/; s/dog/cat/' data1.txt
+				  sed 选项 ‘命令1；命令2’ 文件名
+				【 两个命令都作用到文件中的每行数据上。】
+				【 命令之间必须用分号隔开，并且分号紧跟命令，不能有空格。】
+				
+				$ sed -e '
+				> s/brown/green/
+				> s/fox/elephant/
+				> s/dog/cat/' data1.txt
+				【 不使用分号，也可以这样输入 】
+				
+			c、从文件中读取编辑器命令  --  【 -f 】
+				$ cat script1.sed
+				s/brown/green/
+				s/fox/elephant/
+				s/dog/cat/
+				
+				$ sed -f script1.sed data1.txt
+				The quick green elephant jumps over the lazy cat.
+				The quick green elephant jumps over the lazy cat.
+				The quick green elephant jumps over the lazy cat.
+				The quick green elephant jumps over the lazy cat.
+				【 不用在每条命令后面放一个分号。】
+				【 sed编辑器知道每行都是一条单独的命令。】
+				【 避免搞混，sed脚本用sed作为后缀 】
+	
+	3、gawk 程序  --  提供一个类编程环境来修改和重新组织文件中的数据
+		 定义变量来保存数据；
+		 使用算术和字符串操作符来处理数据；
+		 使用结构化编程概念（比如 if-then 语句和循环）来为数据处理增加处理逻辑；
+		 通过提取数据文件中的数据元素，将其重新排列或格式化，生成格式化报告
+		 【从大文本文件中提取数据元素， 并将它们格式化成可读的报告】
+		 【 有点C语言风格的编码 】
+		  
+		1.gawk options program file
+			a、常用的选项
+				-F fs          -->  指定行中划分数据字段的字段分隔符
+				-f file        -->  从指定的文件中读取程序
+				-v var=value   -->  定义gawk程序中的一个变量及其默认值
+				-mf N          -->  指定要处理的数据文件中的最大字段数
+				-mr N          -->  指定数据文件中的最大数据行数
+				-W keyword     -->  指定gawk的兼容模式或警告等级
+			
+			b、从命令行读取程序脚本
+				gawk程序脚本用一对花括号来定义。你必须将脚本命令放到两个 {花括号} 中，还必须放在 '引号' 中
+					$  gawk '{(print "Hello World!"}'
+				【 所以gawk程序会从 STDIN 接收数据。在运行这个程序时，它会一直等待从 STDIN 输入的文本。】
+				【 输入文本后，gawk对问文本运行一遍脚本 】
+				跟sed编辑器一样， gawk程序会针对数据流中的【每行文本】执行程序脚本。 
+				Ctrl + D 生成一个EOF 字符。
+				
+			c、使用数据字段变量
+				gawk会自动给一行中的每个数据元素分配一个变量
+					$0 代表整个文本行；
+				  $1 代表文本行中的第1个数据字段；
+				  $2 代表文本行中的第2个数据字段；
+				  $n 代表文本行中的第n个数据字段。
+				
+				在文本行中，每个数据字段都是通过 字段分隔符 划分的  【 通过选项-F fs指定 】
+					gawk在读取一行文本时，会用【预定义的字段分隔符】划分每个数据字段。 
+					gawk中默认的字段分隔符是任意的【 空白字符 -- 空格或者制表符 】 
+					
+				$ cat data2.txt
+				One line of test text.
+				Two lines of test text.
+				Three lines of test text.
+				
+				【gawk    program     file  】
+				$ gawk '{print $1}' data2.txt
+				One
+				Two
+				Three
+				
+				如果想采用其他字段分隔符，用【 -F 】来指定
+					$ gawk -F: '{print $1}' /etc/passwd
+			
+			d、 在程序脚本中使用多个命令  --  用;隔开或者分行
+				$echo "My name is Rich" | gawk '{$4="Christine"; print $0}'
+				My name is Christine
+				
+				$ gawk '{				##分行
+				> $4="Christine"		##一行一条命令
+				> print $0}'			##以 }'  结束命令书写，可以后接文件
+				My name is Rich         ##gawk默认从STDIN读取文本
+				My name is Christine  
+			
+			e、从文件中读取程序
+				$ cat script2.gawk
+				{print $1 "'s home directory is " $6}
+				
+				$ gawk -F: -f script2.gawk /etc/passwd
+				【 可以在程序文件中指定多条命令。{}不可少 】 
+				【 只要一条命令放一行即可， 不需要用分号。】
+					{
+						text = "'s home directory is "   ##使用变量
+						print $1 text $6                 ##引用变量没有使用$
+					}
+					
+				【 变量赋值不用等号紧挨着变量，变量引用不用 $ 】
+			
+			f、在处理数据前运行脚本  --  【 BEGIN 】
+				比如在生成报告前显示标题
+					$ gawk 'BEGIN {print "Hello World!"}'
+					Hello World!
+				
+				$ cat data3.txt
+				Line 1
+				Line 2
+				Line 3
+				
+				$ gawk 'BEGIN {print "The data3 File Contents:"}
+				> {print $0}' data3.txt
+				The data3 File Contents:
+				Line 1
+				Line 2
+				Line 3
+				在gawk执行了BEGIN脚本后，它会用第二段脚本来处理文件数据。
+				这么做时要小心，【两段】脚本仍然被认为是 gawk 命令行中的一个文本字符串。
+				
+			g、在处理数据后运行脚本  --  【 END 】
+				END 关键字允许你指定一个程序脚本，gawk会在读完数据后执行它。
+					$ gawk 'BEGIN {print "The data3 File Contents:"}
+					> {print $0}
+					> END {print "End of File"}' data3.txt
+					The data3 File Contents:
+					Line 1
+					Line 2
+					Line 3
+					End of File
+			
+				BEGIN {
+					print "The latest list of users and shells"
+					print " UserID \t Shell"
+					print "-------- \t -------"
+					FS=":"   ##定义了字段分割符
+				}
+				{
+					print $1 " \t " $7
+				}
+					END {
+					print "This concludes the listing"
+				}
+				【 END用来给报告添加页脚 】
+				
+------------------------------------------------------------------------------------------------------------
+19.2sed 编辑器基础
+	1、更多的替换选项
+		a、替换标记  --  【 s/pattern/replacement/flags 】
+			替换命令在替换多行中的文本时，默认替换【每行】中出现的第一处。
+			要替换每行的多处，要用到替换标记
+			s/pattern/replacement/flags
+			  被替换   用来替换 【替换标记】
+			  
+			有4种可用的替换标记
+				数字，表明新文本将替换第几处模式匹配的地方；
+				g ，表明新文本将会替换所有匹配的文本；
+				p ，表明原先行的内容要打印出来；
+				w file ，将替换的结果写到文件中。
+				
+			-n选项将禁止sed编辑器输出。但 p 替换标记会输出修改过的行。
+			将二者配合使用的效果就是只输出被替换命令修改过的行。
+			
+			w file 会输出被替换命令修改过的行 到 文件file中
+			
+		b、替换字符  --  替换 /
+			如果要替换字符串中的路径，会很麻烦，sed编辑器允许选择【其他字符】来作为替换命令中的【字符串分隔符】
+				$ sed 's!/bin/bash!/bin/csh!' /etc/passwd
+				
+	2、使用地址  --  【 行寻址 】作用于特定的行
+		[address]command    
+		
+		address {
+					command1
+					command2
+					command3
+				}
+	
+		1.以数字形式表示行区间
+			sed编辑器会将文本流中的第一行编号为1，然后继续按顺序为接下来的行分配行号
+			
+			a、指定地址，单个行号
+				$ sed '2s/dog/cat/' data1.txt
+			b、指定地址，区间范围
+				$ sed '2,3s/dog/cat/' data1.txt
+			c、从某一行开始到结束
+				$ sed '2,$s/dog/cat/' data1.txt
+		
+		2.用文本模式来过滤出行
+			     /pattern/command    【 sed会作用于含有pattern的行上 】
+			sed '/Samantha/s/bash/csh/' /etc/passwd
+		
+		3.命令组合
+			a、如果需要在单行上执行多条命令，可以用花括号将多条命令组合在一起。
+				$ sed '2{
+				> s/fox/elephant/
+				> s/dog/cat/
+				> }' data1.txt
+				The quick brown 
+				
+			b、也可以在一组命令前指定一个地址区间
+				$ sed '3,${
+				> s/brown/green/
+				> s/lazy/active/
+				> }' data1.txt
+							
+	3、删除行  --  【 d 】
+		$ sed '3d' data6.txt             #删除第三行
+		$ sed '2,3d' data6.txt           #删除2-3行
+		$ sed '3,$d' data6.txt           #删除从3-最后所有行
+		$ sed '/number 1/d' data6.txt    #删除所有包含number 1的行
+		
+		【 sed编辑器不会修改原始文件。你删除的行只是从sed编辑器的输出中消失了。】
+		【 原始文件仍然包含那些“删掉的”行。】
+		
+		用两个文本匹配模式来指定某一个区间
+		$ sed '/1/,/3/d' data6.txt
+		【 这么做非常危险，匹配到1就会打开删除功能 】
+		
+	4、插入和附加文本  -- 【 i a 】
+		1.插入
+			插入（ insert ）命令（ i ）会在指定行前增加一个【新行】
+			附加（ append ）命令（ a ）会在指定行后增加一个【新行】
+			
+			sed '[address]command\new line'
+			
+			$ echo "Test Line 2" | sed 'i\Test Line 1'  #i 插入数据前面
+			$ echo "Test Line 2" | sed 'a\Test Line 1'  #a 插入数据后面
+		
+		2.附加
+			【和插入一样，但是只能指定单个行，不能指定区间】
+			如果你有一个多行数据流，想要将新行附加到数据流的末尾，
+			只要用【 代表数据最后一行的 $美元符$ 】就可以了。
+			$ sed '$a\
+			> This is a new line of text.' data6.txt
+		3.要插入或附加多行文本，就必须对要插入或附加的新文本中的每一行使用反斜线，直到最后一行。
+			$ sed '1i\
+			> This is one line of new text.\
+			> This is another line of new text.' data6.txt
+
+	5、修改行  --  【 c 】
+		1.修改（ change ）命令允许修改数据流中整行文本的内容。
+		
+		2.修改第三行  数字寻址
+			$ sed '3c\
+			> This is a changed line of text.' data6.txt
+			
+			This is line number 1.
+			This is line number 2.
+			This is a changed line of text.
+			This is line number 4.
+		
+		3.修改第三行  文本模式寻址
+			$ sed '/number 3/c\
+			> This is a changed line of text.' data6.txt
+			【 文本模式修改命令会修改它匹配的数据流中的任意文本行。】
+			
+		4.修改第三行  区间寻址 --  【 用一行换两行，而不是逐行修改 】
+			$ sed '2,3c\
+			> This is a new line of text.' data6.txt
+			This is line number 1.
+			This is a new line of text.
+			This is line number 4.
+
+	6、转换命令  --  【 y 】
+		【 唯一可以处理单个字符的sed编辑器命令 】
+			[address]y/inchars/outchars/
+		1.【 转换命令会对 inchars 和 outchars 值进行一对一的映射。】
+			inchars 中的第一个字符会被转换为 outchars 中的第一个字符， 
+			第二个字符会被转换成 outchars 中的第二个字符...
+			$ sed 'y/123/789/' data8.txt
+			This is line number 7.
+			This is line number 8.
+			This is line number 9.
+			This is line number 4.
+			This is line number 7 again.
+			This is yet another line.
+			This is the last line in the file.
+			
+		2.转换命令是一个全局命令，也就是说，
+			它会文本行中找到的所有指定字符自动进行转换，而不会考虑它们出现的位置。
+			$ echo "This 1 is a test of 1 try." | sed 'y/123/456/'
+			This 4 is a test of 4 try.
+			
+	7、回顾打印
+		19.2.1节介绍了如何使用 p 标记和替换命令显示sed编辑器修改过的行。还有三个命令用来打印
+			a、p 命令用来打印文本行；
+	  	b、等号（ = ）命令用来打印行号；
+	  	c、l （小写的L）命令用来列出行。
+	
+		1.打印行  --  【 p 】
+			跟替换命令中的 p 标记类似， p 命令可以打印sed编辑器输出中的一行。
+			【 打印命令最常见的用法是打印包含匹配文本模式的行。】
+				$ cat data6.txt
+				This is line number 1.
+				This is line number 2.
+				This is line number 3.
+				This is line number 4.
+				
+				$ sed -n '/number 3/p' data6.txt
+				This is line number 3.
+				
+			用 -n 选项禁止输出其他行，只打印包含匹配文本模式的行，
+			也可以用-n来快速输出某些行
+				$ sed -n '2,3p' data6.txt
+				This is line number 2.
+				This is line number 3.
+				
+		2.打印行号  --  【 = 】
+			【 等号命令会打印行在数据流中的当前行号。】
+				$ sed '=' data1.txt
+				1
+				The quick brown fox jumps over the lazy dog.
+				2
+				The quick brown fox jumps over the lazy dog.
+				3
+				The quick brown fox jumps over the lazy dog.
+				4
+				The quick brown fox jumps over the lazy dog.
+			
+			如果你要在数据流中查找特定文本模式的话，等号命令用起来非常方便。
+				$ sed -n '/number 4/{
+				> =
+				> p
+				> }' data6.txt
+				4
+				This is line number 4.
+				
+		3.列出行  --  【 l（小写L） 】
+			列出（ list ）命令（ l ）可以打印数据流中的文本和不可打印的ASCII字符。
+			任何不可打印字符要么在其八进制值前加一个反斜线，要么使用标准C风格的命名法比如 \t ，来代表制表符。
+	
+	8、使用 sed 处理文件	
+		1. 写入文件  --  【 w 】
+			[address]w filename
+				$ sed '1,2w test.txt' data6.txt    ##将数据流中的前两行写入文件test.txt
+				This is line number 1.
+				This is line number 2.
+				This is line number 3.
+				This is line number 4.
+				
+				$ cat test.txt
+				This is line number 1.
+				This is line number 2.
+		
+			b、从公用文件中筛选有效的信息，加上-n 使sed不输出到STDOUT
+		
+		2. 从文件读取数据  --  【 r 】
+			a、读取（ read ）命令（ r ）允许你将一个【独立文件中的数据】插入到【数据流】中。
+				[address]r filename
+				
+				$ cat data12.txt
+				This is an added line.
+				This is the second added line.
+				
+				$ sed '3r data12.txt' data6.txt
+				This is line number 1.
+				This is line number 2.
+				This is line number 3.
+				This is an added line.
+				This is the second added line.
+				This is line number 4.
+				【 sed编辑器会将数据文件中的所有文本行都插入到数据流中 】
+				
+			b、【 如果你要在数据流的末尾添加文本，只需用美元符地址符就行了】
+				$ sed '$r data12.txt' data6.txt
+				
+			c、【 读取命令的另一个很酷的用法是和删除命令配合使用 】
+				利用另一个文件中的数据来替换文件中的占位文本
+					$ cat notice.std
+					Would the following people:
+					LIST
+					please report to the ship's captain.
+				要用一个文件的内容来替换，LIST这个占位文本，然后删除LIST
+				
+					$ sed '/LIST/{         ##文本匹配模式
+					> r data11.txt         ##读取一个文本的内容
+					> d                    ##删除LIST所在行
+					> }' notice.std
+					Would the following people:
+					Blum, R Browncoat
+					McGuiness, A Alliance
+					Bresnahan, C Browncoat
+					Harken, C Alliance
+					please report to the ship's captain.
+					
+				
+				
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,252 @@
+ ************************************************************************************************************
+ ------------------------------------------------------------------------------------------------------------
+ 13.1 for 命令
+	1、读取列表中的值
+		for var in list
+		do
+			commands
+		done
+		【 循环结束，可以在for之外使用var 】
+		for test in Alabama Alaska Arizona Arkansas California Colorado
+		do
+			echo The next state is $test
+		done
+		echo "The last state we visited was $test"
+		test=Connecticut  #修改test的值
+		echo "Wait, now we're visiting $test"  #使用test的值
+		
+		$ ./test1
+		The next state is Alabama
+		The next state is Alaska
+		The next state is Arizona
+		The next state is Arkansas
+		The next state is California
+		The next state is Colorado
+		The last state we visited was Colorado
+		Wait, now we're visiting Connecticut
+		$test 变量保持了其值， 也允许我们修改它的值，并在 for 命令循环之外跟其他变量一样使用。
+	
+	2、list中包含 '单引号' 时，转义，用 "双引号" 包含使用 '单引号' 的值
+		
+	3、list中包含空格时 -- for假定每个值都是用空格隔开的， for 命令用空格来划分列表中的每个值
+		【 for中如果在单独的数据值中有空格，就必须用 "双引号" 将这些值圈起来。】
+		
+	4、向列表中添加一个值
+		list="Alabama Alaska Arizona Arkansas Colorado"
+		list=$list"Connecticut"
+		这是向变量中存储的已有文本字符串尾部添加文本的一个常用方法。
+		
+	6、从变量读取值
+		for state in $list
+		do
+			echo "Have you ever visited $state?"
+		done
+	
+	6、从命令读取值
+		file="states"
+		for state in $(cat $file)
+		do
+			echo "Visit beautiful $state"
+		done
+		文件名中没有加入路径。 这要求文件和脚本位于同一个目录中。如果不是的话，你需要使用全路径名
+		（不管是绝对路径还是相对路径）来引用文件位置。
+	
+	7、环境变量 【 IFS 】 -- 内部字段分隔符（internal field separator）
+		IFS 环境变量定义了bash shell用作字段分隔符的一系列字符
+			空格  制表符  换行符
+		bash shell 遇上其中的任意一个，都会认为是新的数据的开始。
+		
+	8、可以修改IFS的值，以便在列表中使用空格，但是向java的画笔一样，先保留原来的值，使用后马上回复。
+		IFS.OLD=$IFS
+		IFS=$'\n'
+		<在代码中使用新的IFS值>
+		IFS=$IFS.OLD
+		这就保证了在脚本的后续操作中使用的是 IFS 的默认值。
+	
+	9、如果要指定多个 IFS 字符，只要将它们在赋值行串起来就行。
+		【 IFS=$'\n':;" 】
+		这个赋值会将换行符、冒号、分号和双引号作为字段分隔符。如何使用 IFS 字符解析数据没有任何限制。
+	
+	10、用通配符读取目录 --  文件扩展匹配
+		1、文件扩展匹配--生成匹配指定通配符的文件名或路径名的过程。
+		
+		2、遍历目录
+			#!/bin/bash
+			# iterate through all the files in a directory
+			for file in /home/rich/test/* /home/rich/badtest ##要遍历的两个文件夹用空格隔开
+			do
+				if [ -d "$file" ]
+				then
+					echo "$file is a directory"
+				elif [ -f "$file" ]
+				then
+					echo "$file is a file"
+				fi
+			done
+			
+			将 $file 变量用双引号圈起来。
+			如果不这么做，遇到含有 空格 的目录名或文件名时就会有错误产生。
+	
+		3、思考：可已经list换成一个数组，这样可以实现对多个路径的遍历
+	
+------------------------------------------------------------------------------------------------------------
+13.2 C 语言风格的 for 命令
+	for (( variable assignment ; condition ; iteration process ))
+	双括号内，变量赋值可以有空格,变量引用不用加$,数学计算不用加expr
+	C语言风格的 for 命令也允许为迭代使用多个变量，但是只能定义一个条件。
+	for (( a=1, b=10; a <= 10; a++, b-- ))
+	
+------------------------------------------------------------------------------------------------------------
+13.3while命令
+	while test command
+	do
+		other commands
+	done
+	
+	1、最常见的 test command 的用法是用 [方括号] 来检查循环命令中用到的shell变量的值。
+		$ cat test10
+		#!/bin/bash
+		# while command test
+		var1=10
+		while [ $var1 -gt 0 ]
+		do
+			echo $var1
+			var1=$[ $var1 - 1 ]  #这里使用的是 [方括号]
+		done
+		
+	2、while 命令允许你在 while 语句行定义多个测试命令。【 每个测试命令都出现在单独的一行上。】
+		只有最后一个 测试命令 的 退出状态码 会被用来决定什么时候结束循环。
+		#!/bin/bash
+		# testing a multicommand while loop
+		var1=10
+		while echo $var1
+				[ $var1 -ge 0 ] #【 每个测试命令都出现在单独的一行上。】
+		do
+			echo "This is inside the loop"
+			var1=$[ $var1 - 1 ]
+		done
+		
+		-1会被打印出来，在每次迭代中所有的测试命令都会被执行。
+
+------------------------------------------------------------------------------------------------------------
+13.4until 命令
+	until test commands
+	do
+		other commands
+	done
+	 while 命令类似，可以在until 命令语句中放入多个测试命令，有最后一个命令的退出状态码决定了
+	 bash shell是否执行已定义的 other commands 。
+	 
+------------------------------------------------------------------------------------------------------------
+13.6循环处理文件数据
+	使用嵌套循环
+	修改IFS的值
+	
+	#!/bin/bash
+	# changing the IFS value
+	IFS.OLD=$IFS
+	IFS=$'\n'
+	for entry in $(cat /etc/passwd)  ##【 对命令的引用使用 (括号) 】
+	do
+		echo "Values in $entry –"
+		IFS=:
+		for value in $entry
+		do
+			echo "  $value"
+		done
+	done
+	IFS=$IFS.OLD
+
+------------------------------------------------------------------------------------------------------------
+13.7控制循环
+	break 命令
+		跳出单个循环 -- 常规
+		跳出内部循环 -- 常规
+		跳出外部循环 -- break 命令接受单个命令行参数值
+			【 break n -- n 指定了要跳出的循环层级。1为当前，2为当前的外一层】
+			默认情况下， n 为 1 ，表明跳出的是当前的循环。
+			如果你将n 设为 2 ， break 命令就会停止下一级的外部循环。
+	continue 命令 -- 提前中止某次循环
+		【 continue 命令也允许通过命令行参数指定要继续执行哪一级循环：1为当前，2为当前的外一层 】
+		continue n
+
+------------------------------------------------------------------------------------------------------------
+13.8处理循环的输出
+	对循环的输出使用管道或进行重定向，通过在 done 命令之后添加一个处理命令来实现。
+	【 这种方法同样适用于将循环的结果管接给另一个命令。】
+		for file in /home/rich/*  #对路径的遍历可以直接写路径名字
+		do
+			if [ -d "$file" ]
+			then
+				echo "$file is a directory"
+			elif
+				echo "$file is a file"
+			fi
+		done > output.txt
+	
+------------------------------------------------------------------------------------------------------------
+13.9实例
+	1、打印PATH中的可执行文件
+		#!/bin/bash
+		IFS.OLD=$IFS
+		IFS=:
+		for folder in $PATH
+		do
+			for file in $folder/*
+			do
+				if [ -x $file ]
+				then
+					echo "-->	$file"
+				fi
+			done
+		done > path.file
+		IFS=$IFS.OLD
+		cat path.file
+	
+	2、创建多个用户账户
+		#!/bin/bash
+		# process new user accounts
+		input="users.csv"
+		while IFS=',' read -r userid name  #read会自动读取下一行，当返回false时，读到文件尾
+		do
+			echo "adding $userid"
+			useradd -c "$name" -m $userid
+		done < "$input"
+		
+		
+	
+	
+------------------------------------------------------------------------------------------------------------
+
+	
+	
+
+	
+	
+		
+	
+	 
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
