@@ -1,0 +1,4 @@
+1.在shell脚本中通过source（.） filename的方式，将函数库文件添加到自己脚本中
+	release.sh -> 3:source ./release_config/config.sh
+
+2.
