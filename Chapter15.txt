@@ -257,14 +257,58 @@
 		$ ls -al test19*
 		-rwxr--r-- 1 rich rich 356 Oct 29 22:03 test19*
 		
-	4、在/tmp 目录创建临时文件
+	4、在/tmp 目录创建临时文件【 -t 】
 		1.-t 选项会强制 mktemp 命令来在系统的临时目录来创建该文件【 返回全路径而非文件名 】。
 			$ mktemp -t test.XXXXXX
 			/tmp/test.xG3374
 			$ ls -al /tmp/test*
 			-rw------- 1 rich rich 0 2014-10-29 18:41 /tmp/test.xG3374
+			由于 mktemp 命令返回了全路径名，你可以在Linux系统上的任何目录下引用该临时文件
 			
-		2.
+	5、创建临时目录【 -d 】
+		-d 选项告诉 mktemp 命令来创建一个临时目录而不是临时文件。
+		
+------------------------------------------------------------------------------------------------------------
+15.8记录消息
+	1、将输出同时发送到显示器和日志文件【 tee 】
+		tee 命令相当于管道的一个T型接头。它将从 STDIN 过来的数据同时发往两处
+			一处是STDOUT；
+			另一处是 tee 命令行所指定的文件名。
+				$ date | tee testfile
+				Sun Oct 19 18:56:21 EDT 2014
+				$ cat testfile
+				Sun Oct 19 18:56:21 EDT 2014
+			输出出现在了 STDOUT 中，同时也写入了指定的文件中。
+	2、tee命令提供了a选项，表示追加。默认是覆盖原来的数据。
+	
+------------------------------------------------------------------------------------------------------------
+15.9实例
+	1、
+	#!/bin/bash
+	# read file and create INSERT statements for MySQL
+	outfile='members.sql'
+	IFS=','
+	while read lname fname address city state zip
+	do
+		cat >> $outfile << EOF
+		INSERT INTO members (lname,fname,address,city,state,zip) VALUES
+		('$lname', '$fname', '$address', '$city', '$state', '$zip');
+		EOF
+	done < ${1}
+	
+------------------------------------------------------------------------------------------------------------
+15.10小结
+	1、脚本的输入/输出都可以从标准输入（ STDIN ）/标准输出（ STDOUT ）重定向到系统中的任意文件。
+	
+	2、bash shell允许在脚本中创建自己的文件描述符。
+		你可以创建文件描述符 3 ~ 9 ，并将它们分配给要用到的任何输出文件。
+		一旦创建了文件描述符，你就可以利用标准的重定向符号将任意命令的输出重定向到那里。
+		
+	3、bash shell也允许将输入重定向到一个文件描述符， 这给出了一种将文件数据读入到脚本中的简便途径。
+	
+	4、mktemp 命令是bash shell中一个很方便的特性，可以轻松地创建临时文件和目录。
+	
+			
 		
 		
 			

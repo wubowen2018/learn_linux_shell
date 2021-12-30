@@ -1,0 +1,249 @@
+﻿1.1
+	1、$表示普通用户，#表示超级用户
+	2、#!/bin/bash --> #!在解释器路径之前，/bin/bash是解释器路径
+	3、两种运行shell脚本的方式
+		->以sh的参数运行  $sh /home/path/script.sh
+		->具有可执行权限的文件 $chmod a+x script.sh赋予所有的用户script.sh可执行权限
+		./script.sh  当前文件夹
+		/home/path/script.sh 具体路径的执行方法
+	4、#!/bin/bash ==> /bin/bash script.sh
+	5、#单行注释
+	
+	***
+		注意：在windows下编写的脚本格式是doc的，在Linux不能直接运行，可以vim filename
+		然后，进入命令模式，set ff 可以查看是dos或者unix。用set ff=unix设置成unix格式
+		chmod a+x script.sh 让所有的用户获取可执行的权限 ./script.sh 即可运行
+	***
+		使用shell改变当前工作路径
+			#!/bin/bash
+			#文件名:cd_dir
+			cd /
+			pwd
+			echo "compiete"
+		保存，后执行发现中间有切换路径，但是结果没有改变路径，这是因为，执行shell实在子进程中进行的
+		態改变父进程的路径.
+		解决办法有两个
+			第一种：
+				source cd_dir.sh
+			第二种：
+				. ./cd_dir.sh
+				第二种中第一个.是bash内部命令，表示在当前shell中运行
+				./cd_dir.sh是参数，既是要执行的脚本
+	***
+	
+--------------------------------------------------------------------------------------
+1.2终端打印
+	1、echo hello word  echo 'hello world'  echo "hello world" 三种方式有所不通
+		单引号不能用${val}引用变量
+		echo 会在末尾自动加入换行符，而printf不会
+	2、printf的用法和在C语言中一样
+		printf "%-5d %-10s %6.2f"  1 name 95.50
+	3、echo和printf的命令行中的-e -n参数,一定要在任何字符串之前，bash否则会把它们当做另外一个字符串
+		用echo -e "1\t2\t3" 输出有转义序列的字符串
+		
+--------------------------------------------------------------------------------------
+1.3、玩转变量和环境变量
+	1、声明变量直接赋值，不声明类型，所有变量的值都是字符串。
+	2、$ pgrep gedit 获取gedit的PID， $cat /proc/$PID/environ 产看进程PID（$PID表示一个整数）的环境变量
+	3、$ps -report a snapshot of the current processes报告一个当前进程的快照
+	4、var=helloworld  ==> var="hello world"  
+	5、var='hello world'  =/=  var = 'hello world'，前者赋值，后者相等得到boolean值
+	6、echo $var 打印变量的内容
+	7、可以在echo或者printf的双引号中，引用变量的值
+		#!bin/bash
+		#文件名：variables.sh
+		fruit=apple
+		count=5
+		echo "We have $count ${fruit}(s)" ==> We have 5 apple(s)
+		【 对变量的引用可以直接$variable,对命令的引用要加 (括号) $(date) 】
+	8、echo $PATH 输出环境变量，
+		export PATH="$PATH:new/folder/childfolder"	添加环境变量
+		PATH通常定义在：~/.bashrc 或者 /etc/profile 或者/etc/environment里面
+	9、获取变量的长度
+		$var=12345678901234567890
+		$echo ${#var} ==> 20  字符串所包含的字符数
+	10、识别当前shell版本
+		$echo $SHELL ==> bash/shell
+		$echo $0 ==> -bash/shell
+	11、判断是否为root用户
+			if[$UID -ne 0];then
+			echo Non root user.Please run as root.
+			else
+			echo "Root user"
+			fi
+			root 用户的UID是0
+	
+--------------------------------------------------------------------------------------
+1.4通过shell进行数学运算
+	1、基本算术操作let 、(())和[]。高级操作expr和bc
+	2、普通变量赋值即可定义数值
+		no1=2
+		no2=4
+	3、let命令，变量前不需再加$
+		let result=no1+no2	
+		echo result
+		自增自减操作
+			let no1++
+			let no1--
+		简写
+			let bo1+=6
+	4、[]和let相似
+		result=$[no1+no2]或者
+		result=$[$no1 + 5]
+	5、使用(()),result=$((no1 + 50))
+	6、expr同样用于基本数学操作
+		result='expr 3 + 4'
+		result=$(expr $no1 +5)
+以上方法只能用在整数的运算上，不能用于浮点型运算
+	7、bc用于浮点型的运算
+		echo "0.4 * 25" | bc  ==>10.0
+		
+		no=54
+		result='echo "$no * 1.5" | bc'
+		echo $result  ==>81.0
+	8、其他参数置于具体操作之前，以分号作为定界符，通过stdin传递给bc
+		设定小数精度
+			echo "scale=2;3/8" | bc  ==>0.37
+		进制转换
+			no=100
+			echo "obase=2;$no" | bc  ==>1100100
+			no=1100100
+			echo "obase=10;$no" | bc  ==>100
+		平方根以及平方
+			echo "sqrt(100)" | bc #Square root
+			echo "10^10" | bc #Square
+			
+--------------------------------------------------------------------------------------
+1.5玩转文件描述符和重定向
+	1、0--stdin  1--stdout  2--stderr
+	输出文本保存到另外一个文件中
+		$ echo "This is a sample text" > temp.txt
+			这种方法在写入之前会先清空temp.txt文件里面的内容
+		$ echo "This is a sample text" >> temp.txt
+			这种方法追加在temp.txt后面，不会清空temp.txt里面的内容
+		重定向操作时，内容不会出现在终端，而是直接导入文件，重定向操作符默认使用的是标准输出，
+		如果想指定文件描述符，必须吧文件描述符至于操作符之前。
+			fd>   fd>>    fd是文件描述符，整数	
+	2、在执行命令之后，使用echo $? 可以查看上一个命令执行完毕退出的状态值，在if-then语句中非常有用
+	3、将stderr重定向到一个文件，将stdout重定向到另一个文件
+		$ cmd  2>stderr.txt 1>stdout.txt
+	4、把stderr和stdout都重定向到一个文件
+		$ cmd 2>&1 output.txt
+	5、任何数据被重定向到/dev/null文件都会被丢弃
+		$some_cmd 2> /dev/null
+	6、当stderr和stdout重定向时，文本被传进了文件，就没有内容通过管道(|)传进stdin。有个方法可以重定向
+	到文件，又保存一份作为后续命令的stdin.
+		$cat a* | tee out.txt | cat -n
+		cat: a1:Permission denied
+			1a1
+			2a1
+		上面的代码中，tee从stdin读取数据，把stdout的一份副本重定向到out.txt文件中，一份用cat -n 命令
+		传给了stdout,显示行号
+			查看out.txt
+			cat out.txt ==>
+			a1
+			a1
+		cat: a1:Permission denied属于stderr的内容，tee只能从stdin中读取内容
+		
+		默认情况下，tee会覆盖文件中的内容，但是提供一个参数选项 -a 表示追加
+	7、从stdin读取的命令能以多种方式接受数据
+		$cat file | cmd
+		$cmd1 |cmd2
+	8、可以像从stdin一样从文件读取命令
+		cmd < file
+	9、自定义文件描述符exec
+		$exec 3<get_in.sh   #使用文件描述符3读取get_in.sh
+		$cat <&3            #读取get_in.sh的内容
+		这种操作是一次性的
+	10、exec 4>out.txt        #打开文件，用于写入（截断模式）
+	    echo hello world >&4  #写入内容 
+		cat out.txt           #查看内容  --> hello world
+	11、exec 5>>input.txt     #打开文件，用于写入（追加模式）
+		echo append line >>&5
+		cat input.txt         #查看内容
+		
+--------------------------------------------------------------------------------------
+1.6数组和关联数组
+	1、普通数组：索引是整数
+	   关联数组：索引是字符串
+	2、定义数组
+		array_var=(1 2 3 4 5 6) #储存在以0为始的连续位置上
+		还可以定义成一组索引值
+		array_var1[0]="test1"
+		array_var1[1]="test2"
+		array_var1[2]="test3"
+    3、打印数组指定索引的元素
+		$echo ${array_var[0]} ==>test1
+		index=2
+		$echo ${array_var[$index]}  ==>test3
+	4、以清单形式打印数组所有值
+		$echo ${array_var[*]}  ==>test1 test2 test3
+		$echo ${array_var[@]}  ==>test1 test2 test3
+	5、打印数组的长度
+		$echo ${#array_var[*]}  ==> 3
+	6、定义关联数组
+		a、声明语句将一个变量声明为关联数组
+			$declare -A ass_array
+		b、将元素添加到数组
+			内嵌索引-值列表法
+				ass_array=([index1]=val1 [index2]=val2)
+			单独索引-值法
+				ass_array[index1]=val1
+	7、打印指定索引数组元素
+		$echo ${ass_array[index1]}  ==>val1
+	8、列出数组索引
+		$echo ${!array_var[*]}
+		$echo ${!array_var[@]}
+		$echo ${!ass_array[*]}
+		$echo ${!ass_array[2]}
+	
+--------------------------------------------------------------------------------------
+1.7使用别名  --  【 alias 】
+	1、使用别名有两种方式
+		可以使用alias也可以使用函数
+		$alias new_command='command squence'
+		使用alias命令
+		$echo 'alias install="yum install -y"' >> ~/.bashrc  ##直接写入~/.bashrc持久化
+		
+		使用函数
+		$echo 'alias rm="cp $@ ~/backup; rm $@"' >> ~/.bashrc
+		
+		【 如果别名重复，新的代替旧的 】
+		
+	2、在~/.bashrc文件中删除，或者使用unalias命令可以删除别名
+	
+--------------------------------------------------------------------------------------
+1.8获取终端信息
+	
+		
+	
+	
+
+		
+		
+		
+	
+		
+	
+		
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+		

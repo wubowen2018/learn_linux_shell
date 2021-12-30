@@ -2,20 +2,25 @@
 --------------------------------------------------------------------------------------------------
 12.1 
 	1、if-then
-	if  command
-	then
-		commands
-	fi
-	
-	如果if后面命令的退出状态码是 0，位于 then 部分的命令就会被执行。如果不是0就不会执行then后面的命令，而跳出if
-	-then语句。继续执行下面的语句，但是错误的信息依然后打印在屏幕上
+		if  command
+		then
+			commands
+		fi
+		
+		如果if后面命令的退出状态码是 0，位于 then 部分的命令就会被执行。
+		如果不是0就不会执行then后面的命令，而跳出if-then语句。
+		继续执行下面的语句，但是错误的信息依然后打印在屏幕上
 
+		if command; then
+			commands
+		fi
+	
 	2、if-then-else
-			if  command
-			then
-				commands
-			else
-				commands
+		if  command
+		then
+			commands
+		else
+			commands
 		fi
 		
 	3、嵌套 if
@@ -25,32 +30,35 @@
 		elif  command2
 		then
 			more  commands
+		else
+			commands
 		fi
 		可以继续将多个 elif 语句串起来
 	4、test 命令
-		格式test condition
-		if test condition
-		then
-			commands
-		fi
-		如果不写 test 命令的 condition 部分，它会以非零的退出状态码退出，并执行 else 语句块。
+		0. 格式test condition
+			if test condition
+			then
+				commands
+			else
+				commands
+			fi
+		1. 如果不写 test 命令的 condition 部分，它会以非零的退出状态码退出，并执行 else 语句块。
 
-		my_variable="Full"
+		2.字符创会被认为是 true
+			my_variable="Full"
 
-		if test $my_variable
-		then
-			echo "The $my_variable expression returns a True"
-		else
-			echo "The $my_variable expression returns a False"
-		fi
-		The Full expression returns a True
-		
-		【 test 测试的是一个变量，这个变量有内容，返回的退出状态为0。】
-		【 当测试命令的时候用的是test command,当测试条件时，用的是[] 】
-		test命令还可以进行一下条件判断 --  【 使用[] 】
+			if test $my_variable
+			then
+				echo "The $my_variable expression returns a True"
+			else
+				echo "The $my_variable expression returns a False"
+			fi
+			## The Full expression returns a True
+
+		3.test命令还可以进行以下条件判断
 			数值   字符串  文件
 			
-	5、test进行数值比较--数值条件测试可以用在数字和变量上
+	5、test进行数值比较  --  数值条件测试可以用在  数字 和 变量 上
 		n1 -eq n2 --> 检查 n1 是否与 n2 相等
 		n1 -ge n2 --> 检查 n1 是否大于或等于 n2
 		n1 -gt n2 --> 检查 n1 是否大于 n2
@@ -69,10 +77,17 @@
 		a、相等性
 			在比较字符串的相等性时，比较测试会将所有的标点和大小写情况都考虑在内
 		b、字符串顺序
-		要测试一个字符串是否比另一个字符串大
-			大于号和小于号必须转义，否则shell会把它们当作重定向符号，把字符串值当作文件名；
-			大于和小于顺序和 sort 命令所采用的不同--使用的是标准的ASCII顺序
-		c、 【 字符串长度 --  -n 和 -z 可以检查一个变量是否含有数据。】
+			要测试一个字符串是否比另一个字符串大
+				大于号和小于号必须转义，否则shell会把它们当作重定向符号，把字符串值当作文件名；
+				大于和小于顺序和 sort 命令所采用的不同 --使用的是标准的ASCII顺序
+		c、 字符串长度 --  
+			-n 和 -z 可以检查一个变量是否含有数据。
+		
+		d、在if [ $var1 = $var2 ]
+			如果两个变量都是字符串需要加双引号
+				if [ "$var1" = "$var2" ]; then
+					do ...
+				fi
 
 --------------------------------------------------------------------------------------------------
 12.4

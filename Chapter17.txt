@@ -1,12 +1,287 @@
 ************************************************************************************************************
 ------------------------------------------------------------------------------------------------------------
+17.1 基本的脚本函数
+	1、创建函数
+		1.第一种方法
+			function  name {
+				commands
+			}
+			
+		2.第二种方法
+			name () {
+				commands
+			}
+			
+	2、使用函数
+		1.在行中指定函数名
+		
+		2.注意	
+			a、如果在函数被定义前使用函数，你会收到一条错误消息
+			b、 函数名必须是唯一的
 
+------------------------------------------------------------------------------------------------------------
+17.2返回值
+	1、bash shell会把函数当作一个小型脚本，运行结束时会返回一个退出状态码 echo $? 。
+	有3种不同的方法来为函数生成退出状态码
+	
+		1.默认退出状态码  --  函数中最后一条命令返回的退出状态码
+			使用函数的默认退出状态码是很危险的。
+			
+		2.使用 return 命令
+			使用 return 命令来退出函数并返回【特定的退出状态码】。
+			#!/bin/bash
+			# using the return command in a function
+			function dbl {
+				read -p "Enter a value: " value
+				echo "doubling the value"
+				return $[ $value * 2 ]
+			}
+			dbl
+			echo "The new value is $?"
+			
+			注意：
+				a、函数一结束就取返回值【如果在用 $? 变量提取函数返回值之前执行了其他命令，函数的返回值就会丢失】
+				b、退出状态码必须是0~255【 任何大于256的值都会产生一个错误值 】
+			
+		3.使用函数输出
+			1.将函数的输出保存在变量中
+				result='dbl'
+				
+				#!/bin/bash
+				# using the echo to return a value
+				function dbl {
+					read -p "Enter a value: " value
+					echo $[ $value * 2 ]
+				}
+				result=$(dbl)
+				echo "The new value is $result"
+				
+				$ ./test5b
+				Enter a value: 200
+				The new value is 400
 
+------------------------------------------------------------------------------------------------------------
+17.3 在函数中使用变量
+	1、向函数传递参数
+		像脚本读取命令行参数一样，函数可以读取指定函数时命令行上的参数。【$0,$1...$#】
+			func1 $value1 10
+		由于函数使用特殊参数环境变量作为自己的参数值， 因此它无法直接获取脚本在命令行中的参数值
+		但是可以先将命令行参数保存在变量中，在引用变量给函数传参
+			value=$1
+			func2 $value ArgList
+	
+	2、在函数中处理变量
+		1.函数中的变量有两种	
+			a、全局
+				默认情况下定义的变量都是全局变量，可以在脚本中任何地方使用
+				
+			b、局部
+				在函数内部声明时，使用local关键字，声明一个局部变量，仅限于函数内部使用
+		
+	3、当在其他shell脚本中使用函数时，函数中的全局变量需要谨慎处理，所以如非必须最好使用局部变量
 
+------------------------------------------------------------------------------------------------------------	
+17.4 数组变量和函数
+	1、数组传参
+		1.将数组变量当作单个参数传递的话，函数只会取数组变量的第一个值。
+		
+		2.正确的方法是将数组分成单个的值分别传进函数，在函数内部再组合
+			#!/bin/bash
+			# array variable to function test
+			function testit {
+				local newarray
+				newarray=(;'echo "$@"')  #类似列表解析
+				echo "The new array value is: ${newarray[*]}"
+			}
+			myarray=(1 2 3 4 5)
+			echo "The original array is ${myarray[*]}"
+			testit ${myarray[*]}        #利用通配符将数组分裂传参
+			
+			$ ./test10
+			The original array is 1 2 3 4 5
+			The new array value is: 1 2 3 4 5
+			
+	2、返回数组
+		1.同数组传参一样，返回数组先将数组的单个的元素一个个返回，然后脚本在函数重组
+			#!/bin/bash
+			# returning an array value
+			function arraydblr {
+				local origarray
+				local newarray
+				local elements
+				local i
+				origarray=($(echo "$@"))
+				newarray=($(echo "$@"))
+				elements=$[ $# - 1 ]
+				for (( i = 0; i <= $elements; i++ ))
+				{
+					newarray[$i]=$[ ${origarray[$i]} * 2 ]
+				}
+				echo ${newarray[*]}
+			}
+			myarray=(1 2 3 4 5)
+			echo "The original array is: ${myarray[*]}"
+			arg1=$(echo ${myarray[*]})
+			result=($(arraydblr $arg1))
+			echo "The new array is: ${result[*]}"
+			$
+			$ ./test12
+			The original array is: 1 2 3 4 5
+			The new array is: 2 4 6 8 10
+	
+------------------------------------------------------------------------------------------------------------	
+17.5 函数递归	
+	1、计算阶乘
+		function factorial {
+		if [ $1 -eq 1 ] || [ $1 -eq 0 ]
+		then
+			echo 1
+		else
+			local temp=$[ $1 - 1 ]
+			local result='factorial $temp'
+			echo $[ $result * $1 ]
+		fi
+		}
+		
+	2、使用阶乘
+		#!/bin/bash
+		# using recursion
+		function factorial {
+			if [ $1 -eq 1 ]
+			then
+				echo 1
+			else
+				local temp=$[ $1 - 1 ]
+				local result=$(factorial $temp)
+				echo $[ $result * $1 ]
+			fi
+		}
+		read -p "Enter value: " value
+		result=$(factorial $value)
+		echo "The factorial of $value is: $result"
+		
+		$ ./test13
+		Enter value: 5
+		The factorial of 5 is: 120
+		
+------------------------------------------------------------------------------------------------------------
+17.6创建库
+	步骤
+		1.第一步是创建一个包含脚本中所需函数的公用库文件
+		
+		2.下一步是在用到这些函数的脚本文件中包含myfuncs库文件
+			a、shell函数的作用域
+				shell函数仅在定义它的shell会话内有效。
+			b、使用函数库的关键在于 source 命令
+				source 命令会在当前shell上下文中执行命令，而不是创建一个新shell。
+				同时，使用bash shell 的内置命令 . 表示在当前shell运行
+				
+			#!/bin/bash
+			# using functions defined in a library file
+			. ./myfuncs
+			value1=10
+			value2=5
+			result1=$(addem $value1 $value2)
+			result2=$(multem $value1 $value2)
+			result3=$(divem $value1 $value2)
+			echo "The result of adding them is: $result1"
+			echo "The result of multiplying them is: $result2"
+			echo "The result of dividing them is: $result3"
+			
+			$ ./test14
+			The result of adding them is: 15
+			The result of multiplying them is: 50
+			The result of dividing them is: 2
 
+------------------------------------------------------------------------------------------------------------			
+17.7 在命令行上使用函数
+	1、在命令行上创建函数
+		1.第一种方法
+			单行方式定义函数  --  $ function divem { echo $[ $1 / $2 ]; }
+			【 必须在每个命令后面加个分号 】
+		2.多行方式来定义函数
+			$ function multem {
+			> echo $[ $1 * $2 ]
+			> }
+			$ multem 2 5
+			10
+			
+		3.在命令行上直接定义shell函数的明显缺点是退出shell时，函数就消失了。
+			
+	2、在.bashrc 文件中定义函数
+		1. 直接定义函数
+			直接在.bashrc文件中定义函数
+		
+		2.读取函数文件
+			用 source 命令 . 将库文件中的函数添加到你的.bashrc脚本中
+			$ cat .bashrc
+			# .bashrc
+			# Source global definitions
+			if [ -r /etc/bashrc ]; then
+			. /etc/bashrc
+			fi
+			. /home/rich/libraries/myfuncs   #【 加载库文件要确保库文件的路径名正确 】
+	
+		3.在.bashrc文件中引用库文件，这样起的shell里面可以使用库文件里面的函数
 
+------------------------------------------------------------------------------------------------------------		
+17.8 实例
+	1、GNU shtool shell脚本函数库
+		提供了一些简单的shell脚本函数，可以用来完成日常的shell功能，
+		例如处理临时文件和目录或者格式化输出显示。
+		
+	2、下载：ftp://ftp.gnu.org/gnu/shtool/shtool-2.0.8.tar.gz
+	
+	3、复制到主目录以后提取：tar -zxvf shtool-2.0.8.tar.gz
+	
+	4、构建库
+		shtool文件必须针对特定的Linux环境进行配置。配置工作必须使用标准的 configure 和make 命令，
+		这两个命令常用于C编程环境。
+			$ ./confifgure
+			$ make
+			
+	5、测试模式会测试shtool库中所有的函数。
+	如果全部通过测试，就可以将库安装到Linux系统中的公用位置，这样所有的脚本就都能够使用这个库了。
+	要完成安装，需要使用 make 命令的install 选项。不过你得以root用户的身份运行该命令。
+		# make install
+		
+	6、可以在脚本中使用这些函数了
+	
+	7、shtool库函数
+		Arx   -->   创建归档文件（包含一些扩展功能）
+		Echo   -->   显示字符串，并提供了一些扩展构件
+		fixperm   -->   改变目录树中的文件权限
+		install   -->   安装脚本或文件
+		mdate   -->   显示文件或目录的修改时间
+		mkdir   -->   创建一个或更多目录
+		Mkln   -->   使用相对路径创建链接
+		mkshadow   -->   创建一棵阴影树
+		move   -->   带有替换功能的文件移动
+		Path   -->   处理程序路径
+		platform   -->   显示平台标识
+		Prop   -->   显示一个带有动画效果的进度条
+		rotate   -->   转置日志文件
+		Scpp   -->   共享的C预处理器
+		Slo   -->   根据库的类别，分离链接器选项
+		Subst   -->   使用sed的替换操作
+		Table   -->   以表格的形式显示由字段分隔（field-separated）的数据
+		tarball   -->   从文件和目录中创建tar文件
+		version   -->   创建版本信息文件
+		
+		每个shtool函数都包含大量的选项和参数
+			shtool [options] [function [options] [args]]
+			
+	8、使用库
+		 prop 函数。它可以使用\、|、/和 - 字符创建一个旋转的进度条。
+		 这是一个非常漂亮的工具，可以告诉shell脚本用户目前正在进行一些后台处理工作。
+		 要使用 prop 函数，只需要将希望监看的输出管接到shtool脚本就行了。
+		$ ls –al /usr/bin | shtool prop –p "waiting..."
+		waiting...
+		$
+		
+------------------------------------------------------------------------------------------------------------
 
-
+	
 
 
 

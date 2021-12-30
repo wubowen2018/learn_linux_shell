@@ -11,7 +11,7 @@
 	在CLI提示符后输入 /bin/bash 命令或其他等效的 bash 命令时， 会创建一个新的shell程序。
 	这个shell程序被称为子shell（child shell） 。
 	
-	 ps --forest 命令展示子shell间的嵌套结构。
+	 ps -forest 命令展示子shell间的嵌套结构。
 		$ ps --forest
 		PID TTY TIME CMD
 		1841 pts/0 00:00:00 bash

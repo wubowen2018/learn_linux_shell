@@ -1,0 +1,6 @@
+#!/bin/bash
+
+exec 1>/mnt/testout
+echo "this is a test"
+echo "jinkelu"
+echo "where is this word">&1 
