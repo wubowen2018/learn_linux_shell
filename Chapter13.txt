@@ -1,12 +1,16 @@
  ************************************************************************************************************
  ------------------------------------------------------------------------------------------------------------
  13.1 for 命令
+	for假定list中每个值都是用空格隔开的
+	
 	1、读取列表中的值
+
 		for var in list
 		do
 			commands
 		done
-		【 循环结束，可以在for之外使用var 】
+		
+		-- 循环结束，可以在for之外使用var
 		for test in Alabama Alaska Arizona Arkansas California Colorado
 		do
 			echo The next state is $test
@@ -26,17 +30,38 @@
 		Wait, now we're visiting Connecticut
 		$test 变量保持了其值， 也允许我们修改它的值，并在 for 命令循环之外跟其他变量一样使用。
 	
-	2、list中包含 '单引号' 时，转义，用 "双引号" 包含使用 '单引号' 的值
+	2、 列表中包含单引号的值，需要将这个值使用双引号包裹
+		list中包含'单引号'时，转义，用"双引号"包含 使用'单引号'的值   eg. "wubowen'jeremy' jimmy"
+
+		#!/bin/bash
+		for var in wubowen "jeremy'wu'" jimmy
+		do
+		  echo "my name is $var"
+		done
+		echo "all done"
+
+		[root@jeremy shell]# ./for.sh 
+		my name is wubowen
+		my name is jeremy'wu'
+		my name is jimmy
+		all done
+
 		
-	3、list中包含空格时 -- for假定每个值都是用空格隔开的， for 命令用空格来划分列表中的每个值
-		【 for中如果在单独的数据值中有空格，就必须用 "双引号" 将这些值圈起来。】
+	3、list中包含空格时
+		for中如果在单独的数据值中有空格，就必须用 "双引号" 将这些值圈起来。
 		
 	4、向列表中添加一个值
+		list赋值语句中不能包含多余的空，list紧挨着等号,等号紧挨着值
 		list="Alabama Alaska Arizona Arkansas Colorado"
 		list=$list"Connecticut"
+		echo$list  -->  Alabama Alaska Arizona Arkansas ColoradoConnecticut
 		这是向变量中存储的已有文本字符串尾部添加文本的一个常用方法。
+
+		list=$list" Connecticut"
+		echo$list  -->  Alabama Alaska Arizona Arkansas Colorado Connecticut
+		这样写 for循环的时候会把以空格为分隔符打印出没有一个值
 		
-	6、从变量读取值
+	5、从变量读取值
 		for state in $list
 		do
 			echo "Have you ever visited $state?"
@@ -64,7 +89,7 @@
 		这就保证了在脚本的后续操作中使用的是 IFS 的默认值。
 	
 	9、如果要指定多个 IFS 字符，只要将它们在赋值行串起来就行。
-		【 IFS=$'\n':;" 】
+		【 IFS=$'\n':;" 】  $是语法部分
 		这个赋值会将换行符、冒号、分号和双引号作为字段分隔符。如何使用 IFS 字符解析数据没有任何限制。
 	
 	10、用通配符读取目录 --  文件扩展匹配
@@ -216,7 +241,6 @@
 		
 	
 	
-------------------------------------------------------------------------------------------------------------
 
 	
 	
