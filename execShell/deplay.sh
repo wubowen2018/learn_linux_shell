@@ -4,7 +4,7 @@
 
 svnno=$1
 module=$2
-password=Cshj@2014
+password=password
 isLegalModule=false
 
 # 入参校验
@@ -58,7 +58,7 @@ zip -r Branch_mobappFront.zip ./*
 # 发送到前端服务器，并执行部署
 expect <<- EOF
 set timeout 10000
-spawn scp Branch_mobappFront.zip nginx@203.3.131.186:install
+spawn scp Branch_mobappFront.zip nginx@ip:install
 expect{
 	"yes/no" { send "yes\n";exp_continue }
 	"*password" { send "$password\n" }
@@ -70,7 +70,7 @@ EOF
 
 expect <<- EOF
 set timeout 10000
-spawn ssh nginx@203.3.131.186 "cd install;sh install.shs"
+spawn ssh nginx@ip "cd install;sh install.shs"
 expect{
 	"yes/no" { send "yes\n";exp_continue }
 	"*password" { send "$password\n" }

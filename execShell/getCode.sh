@@ -18,7 +18,7 @@ if [[ -d "$newCodePath" ]]; then
 	cd $HOME/subversion/$newCodePath
 	svn up
 else
-	svn co http://10.0.240.102/svn/mobileebank/branches/$newCodePath
+	svn co http://ip/svn/mobileebank/branches/$newCodePath
 fi
 
 cd $HOME/subversion/$newCodePath
