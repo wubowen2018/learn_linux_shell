@@ -23,7 +23,7 @@ fi
 
 printf "==== $(date +%y-%m-%d) ======= $PATH_TO_JAR Starting =========\n"
 
-nohup java -Denv=${ENV} -Dhades.rpc.registry.enable-nacos-registry=false -Dapollo.cluster=${MOBAPP_CLUSTER} ${JAVA_OPTS} -jar ${PATH_TO_JAR} >> startup.log
+nohup java -Denv=${ENV} -Dhades.rpc.registry.enable-nacos-registry=false -Dapollo.cluster=${MOBAPP_CLUSTER} ${JAVA_OPTS} -jar ${PATH_TO_JAR} > startup.log 2>&1 &
 
 rc=#?;
 
